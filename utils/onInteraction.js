@@ -23,12 +23,13 @@ export function onInteraction(callback) {
       const entry = interaction.reduce((prev, curr) =>
         prev.duration >= curr.duration ? prev : curr
       );
+      const entryTarget = interaction.map(entry => entry.target).find(target => !!target);
       const value = entry.duration;
 
       callback({
         attribution: {
           eventEntry: entry,
-          eventTarget: entry.target,
+          eventTarget: entryTarget,
           eventTime: entry.startTime,
           eventType: entry.name
         },
@@ -92,6 +93,7 @@ export function logInteraction(interaction) {
 }
 
 export function logAllInteractions() {
+  // Some HMR systems will re-run and not clean up observers
   // if (window.loaded) return;
   // window.loaded = true;
   onInteraction(logInteraction);

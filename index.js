@@ -13,9 +13,9 @@ function getBusy() {
   blockFor(200);
 }
 
-const button = document.getElementById("myButton");
+// const button = document.getElementById("myButton");
 
-button.addEventListener("click", () => {
-  getBusy();
-  updateUI();
-});
+// button.addEventListener("click", () => {
+//   getBusy();
+//   updateUI();
+// });
