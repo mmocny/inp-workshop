@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+import { LitElement, html, css } from 'https://unpkg.com/lit-element?module';
 
 export class ScoreKeeper extends LitElement {
 	static properties = {
@@ -32,7 +32,6 @@ export class ScoreKeeper extends LitElement {
 		}
 
 		button {
-			// margin: 5px;
 			padding: 0.5em;
 			font-size: 18px;
 		}
@@ -42,14 +41,22 @@ export class ScoreKeeper extends LitElement {
 		}
 	`];
 
+	get button() {
+		return this.renderRoot?.querySelector('button') ?? null;
+	}
+
 	constructor() {
 		super();
 		this.score = 0;
 		this.dots = 0;
 	}
 
-	startUpdateUI() {
+	incrementAndUpdateUI() {
 		++this.score;
+	}
+
+	startUpdateUI() {
+		this.incrementAndUpdateUI();
 		++this.dots;
 	}
 

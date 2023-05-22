@@ -1,21 +1,27 @@
 import { logAllInteractions } from "./utils/onInteraction.js";
-import { appendMessageToPage, blockFor } from "./helpers.js";
+import { blockFor } from "./helpers.js";
 
 logAllInteractions();
 
-function updateUI() {
-  // console.log("Update the page");
-  appendMessageToPage();
-}
+const score = document.querySelector('score-keeper');
+const button = score.button;
 
-function getBusy() {
-  // This could be "some script"
-  blockFor(200);
-}
 
-// const button = document.getElementById("myButton");
+/**
+  * Introduce demo page.
+  * 
+  * Basic Demos:
+  * - A button that updates a count.
+  * - Default actions (:active state) on a button.  Also: text input, checkbox, radio, select...
+  * - In this case, our button uses JavaScript to update the count.
+  * 
+  * Follow: Uncomment the line to block UI.
+  */
+button.addEventListener("click", () => {
+  blockFor(1000);
+  score.incrementAndUpdateUI();
+});
 
-// button.addEventListener("click", () => {
-//   getBusy();
-//   updateUI();
-// });
+/**
+ * - Showcase Tooling
+ */
