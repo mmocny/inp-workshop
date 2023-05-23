@@ -4,7 +4,7 @@ A interactive demo and workshop for learning about [Interaction to Next Paint (I
 
 ## Getting started
 
-Clone this repository, or, [open it in a cloud editor such as CloudSandbox](codesandbox.io/p/github/mmocny/inp-workshop)).
+Clone this repository, or, [open it in a cloud editor such as CloudSandbox](htttps://codesandbox.io/p/github/mmocny/inp-workshop)).
 
 Follow the instructions in this Readme
 
@@ -26,7 +26,7 @@ INP measures the time it takes-- from the moment the user interacts, until the p
 
 ## Long running Event Handlers
 
-Comment out the `blockFor` function inside the event handler.
+Open the `index.js` file, and comment out the `blockFor` function inside the event handler.
 
 ```
 button.addEventListener("click", () => {
@@ -34,6 +34,8 @@ button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
 ```
 
-[Check Answer](./answers/long_handler_1.html)
+Try interacting with the page again.
 
 ## Next
+
+[Check Answer](./answers/all.js)
