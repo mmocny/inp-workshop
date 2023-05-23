@@ -1,6 +1,6 @@
-import { logAllInteractions } from "./utils/onInteraction.js";
-import { blockFor } from "./utils/blockFor.js";
-import { schedulerDotYield } from "./utils/schedulerDotYield.js";
+import { logAllInteractions } from "./workshop/utils/onInteraction.js";
+import { blockFor } from "./workshop/utils/blockFor.js";
+import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
 
 logAllInteractions();
 
