@@ -2,18 +2,6 @@ button.addEventListener("click", () => {
 	blockFor(1000);
 	score.incrementAndUpdateUI();
   
-	// 10x 100ms blocks = 1000ms
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-	// blockFor(100);
-  
 	// setTimeout(() => {
 	//   console.log("setTimeout fired");
 	//   score.incrementAndUpdateUI();
@@ -44,14 +32,7 @@ button.addEventListener("click", () => {
 	// Web Worker?
   });
   
-  // button.addEventListener("pointerup", () => {
-  //   blockFor(1000);
-  // });
-  
-  setInterval(() => {
-	// blockFor(1000);
-  }, 2000);
-  
+
   
   function blockInPieces(ms) {
 	const parts = ms / 10;
@@ -80,33 +61,33 @@ button.addEventListener("click", () => {
   }
   
   
-  // let timer = null;
-  // button.addEventListener("click", () => {
-  //   score.incrementAndUpdateUI();
-  //   abourtController.abort();
+  let timer = null;
+  button.addEventListener("click", () => {
+    score.incrementAndUpdateUI();
+    abourtController.abort();
   
-  //   if (timer) {
-  //     clearTimeout(timer);
-  //   }
-  //   timer = setTimeout(async () => {
-  //     // blockFor(1000);
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(async () => {
+      // blockFor(1000);
   
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
-  //     // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
+      // scheduler.postTask(() => blockFor(100), { priority: "background", delay: 0 });
   
-  //     // blockInPieces(1000);
-  //     // await blockInPiecesYieldy(1000);
-  //     await blockInPiecesYieldyAborty(1000, abourtController.signal);
-  //   }, 1000);
-  // });
+      // blockInPieces(1000);
+      // await blockInPiecesYieldy(1000);
+      await blockInPiecesYieldyAborty(1000, abourtController.signal);
+    }, 1000);
+  });
   
   let abortController = new AbortController();
   button.addEventListener("click", async () => {
