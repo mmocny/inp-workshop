@@ -28,11 +28,16 @@ INP measures the time it takes-- from the moment the user interacts, until the p
 
 Open the `index.js` file, and comment out the `blockFor` function inside the event handler.
 
+<details>
+<summary>Answer</summary>
+
 ```js
 button.addEventListener("click", () => {
   //blockFor(1000);
   score.incrementAndUpdateUI();
+});
 ```
+</details>
 
 Try interacting with the page again.
 
