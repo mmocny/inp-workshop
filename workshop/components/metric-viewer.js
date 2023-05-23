@@ -1,4 +1,5 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit?module';
+// import { LitElement, html, css } from 'https://unpkg.com/lit?module';
+import { LitElement, html, css } from 'lit';
 
 export const cwvStyles = css`
 .good {
