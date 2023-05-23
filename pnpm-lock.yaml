@@ -7,6 +7,9 @@ dependencies:
   vite:
     specifier: ^4.3.8
     version: 4.3.8
+  web-vitals:
+    specifier: ^3.3.1
+    version: 3.3.1
 
 packages:
 
@@ -344,4 +347,8 @@ packages:
       rollup: 3.23.0
     optionalDependencies:
       fsevents: 2.3.2
+    dev: false
+
+  /web-vitals@3.3.1:
+    resolution: {integrity: sha512-LTfY5GjcY3ngFzNsYFSYL+AmVmlWrzPTUxSMDis2rZbf+SzT7HH3NH4Y/l45XOlrAIunOBeURN9qtBHkRskAiA==}
     dev: false

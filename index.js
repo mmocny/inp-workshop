@@ -1,23 +1,16 @@
-import { logAllInteractions } from "./workshop/utils/onInteraction.js";
 import { blockFor } from "./workshop/utils/blockFor.js";
 import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
-
-logAllInteractions();
 
 const score = document.querySelector('score-keeper');
 const button = score.button;
 
 
-/**
-  * Introduce demo page.
-  * 
-  * Basic Demos:
-  * - A button that updates a count.
-  * - Default actions (:active state) on a button.  Also: text input, checkbox, radio, select...
-  * - In this case, our button uses JavaScript to update the count. Let's take a look...
-  * 
-  * Follow: Uncomment the line to block UI.
-  */
+button.addEventListener("click", () => {
+  blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+
+
 button.addEventListener("click", () => {
   blockFor(1000);
   score.incrementAndUpdateUI();
