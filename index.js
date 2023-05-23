@@ -1,5 +1,5 @@
 import { logAllInteractions } from "./utils/onInteraction.js";
-import { blockFor, addCSS } from "./helpers.js";
+import { blockFor, addCSS } from "./utils/helpers.js";
 
 logAllInteractions();
 
