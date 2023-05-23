@@ -1,4 +1,10 @@
-import setImmediate from './setImmediate.js';
+function setImmediate(callback, ...args) {
+	var channel = new MessageChannel();
+	channel.port1.onmessage = function() {
+		callback(...args);
+	};
+	channel.port2.postMessage(null);
+}
 
 async function schedulerDotYield() {
 	return new Promise(resolve => {

@@ -1,5 +1,6 @@
 import { logAllInteractions } from "./utils/onInteraction.js";
-import { blockFor, addCSS } from "./utils/helpers.js";
+import { blockFor } from "./utils/blockFor.js";
+import { schedulerDotYield } from "./utils/schedulerDotYield.js";
 
 logAllInteractions();
 
