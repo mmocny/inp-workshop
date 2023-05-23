@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'https://unpkg.com/lit-element?module';
+import { LitElement, html, css } from 'https://unpkg.com/lit?module';
 
 export class ScoreKeeper extends LitElement {
 	static properties = {
