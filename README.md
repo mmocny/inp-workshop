@@ -364,9 +364,11 @@ As long as the *Next Paint* after Interaction is allowed to render, even if the 
 
 Asynchronous effects, such as updates that come after timers or network response will *not* affect INP.  Unless, of course, they actually block Next Paint, or the *next* Interaction (as input delay).
 
-One example: a `fetch()` or resource attached to dom elements, which is already prefetched may actually be available before the next rendering opportunity.
+Another example: a `fetch()` or resource attached to dom elements, which is already prefetched may actually be available before the next rendering opportunity.
 
 ## Lesson: if you cannot remove it, at least move it!
+
+If async effects aren't measured-- that's a great place to put our long-running code!
 
 Let's change to update the UI from the click handler, but run the blocking work from the timeout.
 
@@ -384,7 +386,7 @@ button.addEventListener("click", () => {
 ```
 </details>
 
-Can we do better than a 1000ms timeout?
+Can we do better than a fixed 100ms timeout?
 
 We likely still want the code to run as quickly as possible... otherwise we should have just removed it!
 
