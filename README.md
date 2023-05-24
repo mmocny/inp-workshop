@@ -362,7 +362,7 @@ However-- what if I interact *again* after the async call resolves?
 
 As long as the *Next Paint* after Interaction is allowed to render, even if the browser decides it doesn't actually need a new rendering update, Interaction measurement stops.
 
-Asynchronous effects, such as updates that come after timers or network response will *not* affect INP.  Unless, of course, they actually block Next Paint.
+Asynchronous effects, such as updates that come after timers or network response will *not* affect INP.  Unless, of course, they actually block Next Paint, or the *next* Interaction (as input delay).
 
 One example: a `fetch()` or resource attached to dom elements, which is already prefetched may actually be available before the next rendering opportunity.
 
