@@ -15,9 +15,9 @@ A interactive demo and workshop for learning about [Interaction to Next Paint (I
 
 ### Option 2
 
-Use a cloud editor, such as [CloudSandbox](https://codesandbox.io)
+Use a cloud editor, such as [CodeSandbox.io](https://codesandbox.io)
 
-1. [Open the repo](/p/github/mmocny/inp-workshop).
+1. [Open this repo in CodeSandbox.io](https://codesandbox.io/p/github/mmocny/inp-workshop).
 2. Create a branch so you can make edits
 
 ## Overview of the App
