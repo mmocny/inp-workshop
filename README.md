@@ -7,9 +7,18 @@ A interactive demo and workshop for learning about [Interaction to Next Paint (I
 
 ## Getting started
 
-[Clone this repository](https://github.com/mmocny/inp-workshop), or, [open it in a cloud editor such as CloudSandbox](https://codesandbox.io/p/github/mmocny/inp-workshop).
+### Option 1
 
-Follow the instructions in this Readme
+1. [Clone this repository](https://github.com/mmocny/inp-workshop)
+2. `npm install`
+3. `npm run dev`
+
+### Option 2
+
+Use a cloud editor, such as [CloudSandbox](https://codesandbox.io)
+
+1. [Open the repo](/p/github/mmocny/inp-workshop).
+2. Create a branch so you can make edits
 
 ## Overview of the App
 
@@ -495,14 +504,14 @@ Useful for: autocomplete
 <summary>Answer</summary>
 
 ```js
-let timer = null;
+let timer;
 button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
 
   if (timer) {
     clearTimeout(timer);
   }
-  timer = setTimeout(async () => {
+  timer = setTimeout(() => {
     blockFor(1000);
   }, 1000);
 });
