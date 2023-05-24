@@ -342,6 +342,20 @@ One example: a `fetch()` or resource attached to dom elements, which is already 
 
 Let's change to update the UI from the click handler, but run the blocking work from the timeout.
 
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+
+  setTimeout(() => {
+    blockFor(1000);
+  }, 1000);
+});
+```
+</details>
+
 Can we do better than a 1000ms timeout?
 
 We likely still want the code to run as quickly as possible... otherwise we should have just removed it!
