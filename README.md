@@ -268,7 +268,7 @@ Let's simulate a long presentation delay using the `requestAnimationFrame()` API
 button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
   requestAnimationFrame(() => {
-      blockFor(1000);
+    blockFor(1000);
   });
 });
 ```
@@ -278,7 +278,7 @@ button.addEventListener("click", () => {
 
 On this page, responsiveness is super visual, with the scores and timers and the counter UI... but when testing the average page its more subtle.
 
-Also, when interactions do run long, its not always clear what the culprit is.  Is it:
+When interactions do run long, its not always clear what the culprit is.  Is it:
 
 * Input Delay
 * Event Processing Times
@@ -316,6 +316,18 @@ button.addEventListener("click", () => {
 });
 ```
 </details>
+
+...Then use the console and performance panel to diagnose the issue(s).
+
+## Tooling Flow
+
+This is a flow I find useful, every day:
+
+1. Navigate the web, as I normally do
+2. Leave DevTools console open, with the Web Vitals extension logging interactions
+3. If I see a poorly performing interaction, I try to repeat
+  * If I can't repeat, I use the console logs to get insights
+  * If I can repeat, I record in performance panel
 
 ## Experiment: Async effects
 
