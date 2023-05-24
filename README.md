@@ -264,40 +264,39 @@ On any page you want, you can use devtools to help measure responsiveness.
 
 Since you can start non-visual effects inside interactions, such as making network requests, starting timers, or just updating global state… What happens when those *eventually* update the page?
 
-* Wrap our handler with a `setTimeout(() => { ... }, 1000)`
-  * What if it does/doesn't call updates UI?
-  * What if it does/doesn't blockFor?
-  * Answer
+Let's wrap the contents of our event handler with a `setTimeout`.
+
+What if it does/doesn't call updates UI?
+What if it does/doesn't blockFor?
+
 <details>
 <summary>Answer</summary>
 
 ```js
 button.addEventListener("click", () => {
-  //blockFor(1000);
-  score.incrementAndUpdateUI();
+  setTimeout(() => {
+    blockFor(1000);
+    score.incrementAndUpdateUI();
+  }, 1000);
 });
 ```
 </details>
 
-## Conclusion 3
+## If you cannot remove it, at least move it
 
-If you cannot remove it, at least move it!
+Let's change to update the UI from the click handler, but run the blocking work from the timeout.
 
-* Let's update the UI from the click handler, and run the blocking work from the timeout.
+But, can we do better than a 1000ms timeout?
 
-Later, we’ll take a look at some strategies for improving it…
-
-## Experiment: Can we do better?
-
-Timed delay works in this case, but can we do better?
-Is 100ms too much?  Is it guarenteed to be enough?
+We likely still want the code to run as quickly as possible... otherwise we should have just removed it!
 
 Here are some ideas:
 
-* `Promise.then()` (Answer)
-* `requestAnimationFrame` (Answer)
-* `requestIdleCallback` (Answer)
-* `scheduler.postTask()` (Answer)
+* `setTimeout(0)`
+* `Promise.then()`
+* `requestAnimationFrame`
+* `requestIdleCallback`
+* `scheduler.postTask()`
 * Anything else?
 * Challenge: Web Worker
 
@@ -306,69 +305,56 @@ Here are some ideas:
 
 ```js
 button.addEventListener("click", () => {
-  //blockFor(1000);
   score.incrementAndUpdateUI();
-});
-```
-</details>
 
-<details>
-<summary>Answer</summary>
+  // Test one at a time!
 
-```js
-button.addEventListener("click", () => {
-  //blockFor(1000);
-  score.incrementAndUpdateUI();
-});
-```
-</details>
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  //blockFor(1000);
-  score.incrementAndUpdateUI();
-});
-```
-</details>
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  //blockFor(1000);
-  score.incrementAndUpdateUI();
+  setTimeout(() => {
+    blockFor(1000);
+  }, 0);
+  
+  Promise.resolve().then(() => {
+    blockFor(1000);
+  });
+  
+  requestAnimationFrame(() => {
+    blockFor(1000);
+  });
+  
+  requestIdleCallback(() => {
+    blockFor(1000);
+  });
+  
+  scheduler.postTask(() => {
+    blockFor(1000);
+  }, { priority: "background", delay: 0 }); // "user-visible", "background"
 });
 ```
 </details>
 
 If you get stuck – you can read [web.dev/optimize-inp/#optimize-interactions](web.dev/optimize-inp/#optimize-interactions)
 
-## Discuss Results
-
 What worked, what did not?
 
-* Trick: requestAnimationFrame + setTimeout
+* Trick: `requestAnimationFrame` + `setTimeout`
   * simple polyfill for `requestPostAnimationFrame`
 
 ## Mid-point summary
 
 We are about to move into more complicated topics, but the most important lessons you just learned:
 
-* INP measures all interactions
+* INP measures all Interactions
 * Each Interaction is measured from Input to Next Paint -- the way the user *sees* responsiveness.
 * Input Delay, (Event) Processing Times, and then Presentation Delay’s, all affect Interaction responsiveness.
+* You can measure INP, and Interaction breakdowns, easily!
 
-Therefore:
+Lessons:
 
-* Don’t have long running code (long tasks),
-* Move needless code out of event handlers and after next paint
-* Make sure the Paint update is efficient enough for browser
+* Don’t have long running code (long tasks) on your pages
+* Move needless code out of event handlers until after next paint
+* Make sure the Rendering update itself is efficient for browser
 
-## Multiple Interactions (aand Rage Clicks)
+## Multiple Interactions (and Rage Clicks)
 
 Delaying blocking work, still blocks future interactions, as well as other animations.
 
@@ -492,7 +478,7 @@ button.addEventListener("click", async () => {
 });
 ```
 
-## Conclusion 4
+## Conclusion
 
 Breaking up *all* long tasks, allows a site to be responsive to new Interactions.  That let's you provide initial feedabck quickly, and lets you make decisions-- such as aborting in-progress work, such as expensive computations or network requests.
 
