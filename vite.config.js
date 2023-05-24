@@ -5,7 +5,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   base: '/inp-workshop/',
-  root: './answers/',
+  // root: './answers/',
+  root: './',
   build: {
     emptyOutDir: true,
     rollupOptions: {
