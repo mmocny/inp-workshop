@@ -7,7 +7,7 @@ A interactive demo and workshop for learning about [Interaction to Next Paint (I
 
 ## Getting started
 
-Clone this repository, or, [open it in a cloud editor such as CloudSandbox](htttps://codesandbox.io/p/github/mmocny/inp-workshop).
+[Clone this repository](https://github.com/mmocny/inp-workshop), or, [open it in a cloud editor such as CloudSandbox](https://codesandbox.io/p/github/mmocny/inp-workshop).
 
 Follow the instructions in this Readme
 
