@@ -1,0 +1,1 @@
+import"./logAllInteractions-7c4f95cf.js";import"./fps-meter-db9f2547.js";import{b as t}from"./blockFor-149404f6.js";function o(e){requestAnimationFrame(()=>{setTimeout(e,100)})}o(()=>{const e=document.querySelector("score-keeper"),n=e.button;setInterval(()=>{t(1e3)},3e3),n.addEventListener("click",()=>{t(1e3),e.incrementAndUpdateUI(),requestAnimationFrame(()=>{t(1e3)})})});

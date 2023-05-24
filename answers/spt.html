@@ -39,7 +39,46 @@
   <script type="module" src="./workshop/components/fps-meter.js"></script>
 
   <script type="module" src="./workshop/logAllInteractions.js"></script>
-  <script type="module" src="./index.js"></script>
+  <script type="module">
+    import { blockFor } from "./workshop/utils/blockFor.js";
+    function afterNextPaintPlus(callback) {
+      requestAnimationFrame(() => {
+        setTimeout(callback, 100);
+      });
+    }
+
+    // This hack becausse inline script runs before modules
+    afterNextPaintPlus(() => {
+      const score = document.querySelector('score-keeper');
+      const button = score.button;
+
+      button.addEventListener("click", () => {
+        score.incrementAndUpdateUI();
+
+        // Test one at a time!
+
+        // setTimeout(() => {
+        //   blockFor(1000);
+        // }, 0);
+
+        // Promise.resolve().then(() => {
+        //   blockFor(1000);
+        // });
+
+        // requestAnimationFrame(() => {
+        //   blockFor(1000);
+        // });
+
+        // requestIdleCallback(() => {
+        //   blockFor(1000);
+        // });
+
+        scheduler.postTask(() => {
+          blockFor(1000);
+        }, { priority: "background", delay: 0 }); // "user-visible", "background"
+      });
+    });
+  </script>
 </body>
 
 </html>

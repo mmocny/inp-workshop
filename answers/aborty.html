@@ -39,7 +39,46 @@
   <script type="module" src="./workshop/components/fps-meter.js"></script>
 
   <script type="module" src="./workshop/logAllInteractions.js"></script>
-  <script type="module" src="./index.js"></script>
+  <script type="module">
+    import { blockFor } from "./workshop/utils/blockFor.js";
+    import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
+
+    function afterNextPaintPlus(callback) {
+      requestAnimationFrame(() => {
+        setTimeout(callback, 100);
+      });
+    }
+
+    // This hack becausse inline script runs before modules
+    afterNextPaintPlus(() => {
+      const score = document.querySelector('score-keeper');
+      const button = score.button;
+
+
+      async function blockInPiecesYieldyAborty(ms, signal) {
+        const parts = ms / 10;
+        for (let i = 0; i < parts; i++) {
+          if (signal.aborted) return;
+
+          // Polyfill for scheduler.yield()
+          await schedulerDotYield();
+
+          blockFor(10);
+        }
+      }
+
+      let abortController = new AbortController();
+
+      button.addEventListener("click", async () => {
+        score.incrementAndUpdateUI();
+
+        abortController.abort();
+        abortController = new AbortController();
+
+        await blockInPiecesYieldyAborty(1000, abortController.signal);
+      });
+    });
+  </script>
 </body>
 
 </html>

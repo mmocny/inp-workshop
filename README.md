@@ -372,7 +372,7 @@ button.addEventListener("click", () => {
 
   setTimeout(() => {
     blockFor(1000);
-  }, 1000);
+  }, 100);
 });
 ```
 </details>
@@ -568,6 +568,7 @@ button.addEventListener("click", () => {
     setTimeout(() => blockFor(100), 0);
     // ... 10x times total
   });
+});
 ```
 </details>
 
