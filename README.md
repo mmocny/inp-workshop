@@ -431,6 +431,8 @@ button.addEventListener("click", () => {
 ```
 
 Alternatively:
+<details>
+<summary>Answer</summary>
 
 ```js
 function afterNextPaint(callback) {
@@ -469,20 +471,17 @@ Lessons:
 
 ## Multiple Interactions (and Rage Clicks)
 
-Delaying blocking work, still blocks future interactions, as well as other animations.
+Moving long blocking work around can help -- but it still blocks the page -- affecting future interactions as well as many other page updates, such as (certain) animations.
+
+Ideally, we want to remove Long Tasks completely!
 
 Strategies:
 
-* Remove unnecessary code altogether
-* Optimize to not be needlessly long-running
-* Abort staale work when a new interactions arrive.
+* Remove unnecessary code altogether (especially scripts)
+* Optimize code to not be needlessly long-running
+* Abort stale work when a new interactions arrive.
 
-How can we do that?
-
-* Cancel delayed work from starting
-* Abort the work after it starts
-
-## Option 1: Debounce
+## Strategy 1: Debounce
 
 A classic strategy… whenever interactions arrive in quick succession, and the processing or network effects are expensive… delay *starting* work on purpose so you can cancel and restart.
 
@@ -491,6 +490,9 @@ Useful for: autocomplete
 * Use `setTimeout` to delay starting expensive work, with a timer-- perhaps 500-1000ms
 * save the timerid when you do so
 * if a new interaction arrives, `clearTimeout` the previous
+
+<details>
+<summary>Answer</summary>
 
 ```js
 let timer = null;
@@ -505,15 +507,20 @@ button.addEventListener("click", () => {
   }, 1000);
 });
 ```
+</details>
 
-## Option 2: Abort work after it starts
+## Strategy 2: Interrupt long running work
 
 Here’s what we want… even if we’re in the middle of work, we want to *pause our busy work* to start handling any new interactions, right away.
 
 Challenge: How can we do that?
 
 There are some apis like `isInputPending`, but I think it's better to split long tasks up into chunks.
+
 First attempt: let's do something simple.  Replace this:
+
+<details>
+<summary>Answer</summary>
 
 ```js
 button.addEventListener("click", () => {
@@ -523,8 +530,12 @@ button.addEventListener("click", () => {
     setTimeout(() => blockFor(1000), 0);
   });
 ```
+</details>
 
 With this:
+
+<details>
+<summary>Answer</summary>
 
 ```js
 button.addEventListener("click", () => {
@@ -537,6 +548,7 @@ button.addEventListener("click", () => {
     // ... 10x times total
   });
 ```
+</details>
 
 This works by allowing the browser to schedule each task individually, and input can take higher priority!
 
@@ -544,33 +556,37 @@ This strategy works especially well when scheduling entry points -- like if you 
 
 However, this strategy doesn't work as well for breaking apart tightly coupled code -- like a for-loop that uses shared state.
 
-## Option 2: now with yield()
+## Strategy 2: now with yield()
 
 However, we can leverage modern JS access to `async` and `await` in order to easily add "yield points" to any JS function.
 
 For example:
 
+<details>
+<summary>Answer</summary>
+
 ```js
+import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
+
 async function blockInPiecesYieldy(ms) {
   const ms_per_part = 10;
   const parts = ms / ms_per_part;
   for (let i = 0; i < parts; i++) {
-    await schedulerDotYield(); // Polyfill for scheduler.yield()
+    // Polyfill for scheduler.yield()
+    await schedulerDotYield(); 
+
     blockFor(ms_per_part);
   }
 }
-```
 
-Which you can now call directly from your event handlers:
-
-```js
 button.addEventListener("click", async () => {
   score.incrementAndUpdateUI();
   await blockInPiecesYieldy(1000);
 });
 ```
+</details>
 
-## Option 2: now with AbortContoller()
+## Strategy 2: now with AbortContoller()
 
 That worked... but it scheduled more work with each new interaction.
 
@@ -578,7 +594,24 @@ With Option 1: `debounce()`, we cancelled the previous timeout with each new int
 
 One easy way is to use an `AbortController()`:
 
+<details>
+<summary>Answer</summary>
+
 ```js
+import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
+
+async function blockInPiecesYieldyAborty(ms, signal) {
+  const parts = ms / 10;
+  for (let i = 0; i < parts; i++) {
+    if (signal.aborted) return;
+    
+    // Polyfill for scheduler.yield()
+    await schedulerDotYield(); 
+
+    blockFor(10);
+  }
+}
+
 let abortController = new AbortController();
 
 button.addEventListener("click", async () => {
@@ -590,12 +623,22 @@ button.addEventListener("click", async () => {
   await blockInPiecesYieldyAborty(1000, abortController.signal);
 });
 ```
+</details>
+
+* Caution: Yielding is good for responsiveness, because it allows scheduling Initial feedback and allows rendering… but doing it too much can affect overall CPU thoughput.  You don't want to yield between every since line of code!
 
 ## Conclusion
 
-Breaking up *all* long tasks, allows a site to be responsive to new Interactions.  That let's you provide initial feedabck quickly, and lets you make decisions-- such as aborting in-progress work, such as expensive computations or network requests.
+Breaking up *all* long tasks, allows a site to be responsive to new Interactions.  That let's you provide initial feedabck quickly, and  also lets you make decisions-- such as aborting in-progress work.
 
-Caution: Yielding is good for responsiveness, because it allows scheduling Initial feedback and allows rendering… but doing it too much can affect overall CPU thoughput.  You don't want to yield between every since line of code!
+Sometimes that means scheduleding entry points as separate Tasks.
+Sometimes that means adding "yield" points where convenient.
+
+And, review from earlier lessons:
+
+* Don’t have long running code (long tasks) on your pages
+* Move needless code out of event handlers until after next paint
+* Make sure the Rendering update itself is efficient for browser
 
 ## Next Demo: Taking lessons to ReactJS site
 
