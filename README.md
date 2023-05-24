@@ -356,6 +356,8 @@ button.addEventListener("click", () => {
 ```
 </details>
 
+However-- what if I interact *again* after the async call resolves?
+
 ## Take away
 
 As long as the *Next Paint* after Interaction is allowed to render, even if the browser decides it doesn't actually need a new rendering update, Interaction measurement stops.
