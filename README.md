@@ -20,6 +20,11 @@ Use a cloud editor, such as [CodeSandbox.io](https://codesandbox.io)
 1. [Open this repo in CodeSandbox.io](https://codesandbox.io/p/github/mmocny/inp-workshop).
 2. Create a branch so you can make edits
 
+
+### Option 3
+
+Just follow along with a static version: [mmocny.com/inp-workshop/](https://mmocny.com/inp-workshop/)
+
 ## Overview of the App
 
 At the top of the page is a simple "Score" counter and "Increment" button.  A classic demo of reactivity and responsiveness!
