@@ -176,7 +176,7 @@ Or, an api, such as `setInterval`, that periodically blocks the page?
 ```js
 setInterval(() => {
   blockFor(1000);
-});
+}, 3000);
 
 
 button.addEventListener("click", () => {
@@ -189,11 +189,13 @@ These long-running periods are often called Long Tasks.
 
 Notice, it doesn’t *always* affect my interactions!  If I’m not clicking when the task is running, I may get lucky.  Such "random" sneezes can be a nightmare to debug when they only sometimes cause issues.
 
-One way to track these down is through measuring Long Tasks (or Long Animation Frames), and Total Blocking Time, as well as just interactions.
+One way to track these down is through measuring Long Tasks (or Long Animation Frames), and Total Blocking Time.
 
 ## Experiment: What about non-visual updates?
 
-Try to add a `console.log` to your event handler.  Does it show in console, or is it delayed just like Next Paint?  Does it matter if it is called before or after the call to `blockFor`?
+Try to add a `console.log` to your event handler.
+
+When does it show in console?  Is it delayed just like Next Paint?  Does it matter if it is called before or after the call to `blockFor`?
 
 <details>
 <summary>Answer</summary>
@@ -211,6 +213,8 @@ INP measures delays in visual updates (paint) after interactions... but not ever
 
 Console logs, network requests, local storage… these don’t have to wait for browser rendering, and INP does not measure them -- unless they *also* affect next paint.
 
+(Actually, even DOM, style, layout, etc changes are observable right away, through JavaScript, just the pixel representation is delayed)
+
 The web has a simple, but unique system for task scheduling and rendering.
 
 ![Interaction diagram](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/Ng0j5yaGYZX9Bm3VQ70c.svg)
@@ -220,7 +224,7 @@ The web has a simple, but unique system for task scheduling and rendering.
 
 ## Discuss: Presentation Delays
 
-So far, we’ve looked at the performance of JavaScript, via input delay or event handlers directly, but what else affects rendering Next Paint?
+So far, we’ve looked at the performance of JavaScript, via input delay or event handlers, but what else affects rendering Next Paint?
 
 Well, updating the page with expensive effects!
 
@@ -233,6 +237,10 @@ Even if the page update comes quickly, the browser may still have to work hard t
   * Using CSS to power GPU effects
   * Adding very large high-resolution images
   * Using SVG/Canvas to draw complex scenes
+
+![Rendering diagram](https://wd.imgix.net/image/cGQxYFGJrUUaUZyWhyt9yo5gHhs1/yiOcXy6pCOAlx6fhBVFP.jpeg?auto=format&w=1600)
+
+* [RenderingNG](https://developer.chrome.com/articles/renderingng/)
 
 Some Examples, commonly found on the web
 
@@ -252,7 +260,7 @@ button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
   requestAnimationFrame(() => {
       blockFor(1000);
-  })
+  });
 });
 ```
 </details>
@@ -279,14 +287,35 @@ On any page you want, you can use devtools to help measure responsiveness.
   * Record trace
   * Interactions lane, main thread activity, screenshots.
 
+Try adding a bit of all these problems to the page:
+
+<details>
+<summary>Answer</summary>
+
+```js
+setInterval(() => {
+  blockFor(1000);
+}, 3000);
+
+button.addEventListener("click", () => {
+  blockFor(1000);
+  score.incrementAndUpdateUI();
+
+  requestAnimationFrame(() => {
+    blockFor(1000);
+  });
+});
+```
+</details>
+
 ## Experiment: Async effects
 
 Since you can start non-visual effects inside interactions, such as making network requests, starting timers, or just updating global state… What happens when those *eventually* update the page?
 
 Let's wrap the contents of our event handler with a `setTimeout`.
 
-What if it does/doesn't call updates UI?
-What if it does/doesn't blockFor?
+What if it does/doesn't update UI?
+What if it does/doesn't block?
 
 <details>
 <summary>Answer</summary>
@@ -301,13 +330,26 @@ button.addEventListener("click", () => {
 ```
 </details>
 
-## If you cannot remove it, at least move it
+## Take away
+
+As long as the *Next Paint* after Interaction is allowed to render, even if the browser decides it doesn't actually need render, measurement stops.
+
+Asynchronous effects, such as updates that come after timers or network response will *not* affect INP.  Unless, of course, they actually block Next Paint.
+
+One example: a `fetch()` or resource attached to dom elements, which is already prefetched may actually be available before the next rendering opportunity.
+
+## Lesson: if you cannot remove it, at least move it!
 
 Let's change to update the UI from the click handler, but run the blocking work from the timeout.
 
-But, can we do better than a 1000ms timeout?
+Can we do better than a 1000ms timeout?
 
 We likely still want the code to run as quickly as possible... otherwise we should have just removed it!
+
+Goal:
+- Interaction will UpdateUI
+- BlockFor will run as soon as possible, but not block next paint
+- Predictable behaviour without "magic timeouts"
 
 Here are some ideas:
 
@@ -351,12 +393,50 @@ button.addEventListener("click", () => {
 ```
 </details>
 
-If you get stuck – you can read [web.dev/optimize-inp/#optimize-interactions](web.dev/optimize-inp/#optimize-interactions)
+## What worked, what did not?
 
-What worked, what did not?
+Trick: `requestAnimationFrame` + `setTimeout`, a simple polyfill for `requestPostAnimationFrame`.
 
-* Trick: `requestAnimationFrame` + `setTimeout`
-  * simple polyfill for `requestPostAnimationFrame`
+<details>
+<summary>Answer</summary>
+
+```js
+function afterNextPaint(callback) {
+  requestAnimationFrame(() => {
+    setTimeout(callback, 0);
+  });
+}
+
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+
+  afterNextPaint(() => {
+    blockFor(1000);
+  });
+});
+```
+
+Alternatively:
+
+```js
+function afterNextPaint(callback) {
+  requestAnimationFrame(() => {
+    setTimeout(callback, 0);
+  });
+}
+
+async function nextPaint() {
+  return new Promise(resolve => afterNextPaint(resolve));
+}
+
+button.addEventListener("click", async () => {
+  score.incrementAndUpdateUI();
+
+  await nextPaint();
+  blockFor(1000);
+});
+```
+</details>
 
 ## Mid-point summary
 
