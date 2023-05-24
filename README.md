@@ -1,16 +1,19 @@
-# inp-workshop
+# INP workshop
 
 A interactive demo and workshop for learning about [Interaction to Next Paint (INP)](https://web.deb/inp)
 
 ## Getting started
 
-Clone this repository, or, [open it in a cloud editor such as CloudSandbox](htttps://codesandbox.io/p/github/mmocny/inp-workshop)).
+Clone this repository, or, [open it in a cloud editor such as CloudSandbox](htttps://codesandbox.io/p/github/mmocny/inp-workshop).
 
 Follow the instructions in this Readme
 
-## Understanding the UI
+## Overview of the App
 
-* Score UI and "Increment" button
+At the top of the page is a simple "Score" counter and "Increment" button.  A classic demo of reactivity and responsiveness!
+
+Below are 4 metrics:
+
 * INP: the current INP score, which is ~worst Interaction
 * Interaction: the score of the most recent Interaction
 * FPS: the main thread frames-per-second of the page
@@ -22,7 +25,7 @@ The FPS and Timer are not at all necessary for measuring Interactions.  They are
 
 Try to interact with the `Increment` button and watch the score increase.
 
-INP measures the time it takes-- from the moment the user interacts, until the page actually shows the rendered update to the user.
+INP measures how long it takes-- from the moment the user interacts, until the page actually shows the rendered update to the user.
 
 ## Experiment: Long running Event Handlers
 
@@ -41,119 +44,240 @@ button.addEventListener("click", () => {
 
 Try interacting with the page again.
 
-## Look at Tooling
+## Experiment: Rage Clicks
 
-* INP scores in console
-  * JS already added by default to this demo…
-  * You can install the web-vitals extension on Chrome Desktop
-  * You can add this JavaScript yourself to pages, including just using the console.
-* Performance Panel
-  * Record trace
-  * Interactions lane, main thread activity, screenshots.
-
-"On this page, responsiveness is super visual, with the scores and timers and the counter UI... but when testing the average page its more subtle.  Any time you want, you can use devtools to help measure responsiveness.
-
-This page already uses console.logs() to report every interaction.
-You can get such logs yourself with the Web Vitals chrome extension -- on desktop -- or you can just paste the snippet.
-You can also record a perf trace and see interactions.
-
-## Experiment: What happens if you click multiple times, quickly?
+What happens if you click multiple times, quickly?
 
 This is sometimes called “rage clicking”.
+
 When your site has slow responsiveness, we know from data that it increases rage clicks– and more rage clicks can further degrade responsiveness!
-For the next 30 minutes or so, I will not focus on rage clicks, we’ll come back to these.  
-For now, let’s focus on fixing the performance of a single discrete interactions.
 
-## Experiment: What happens if you swap the order of js calls -- updateUI() first, then block()?
+For the few steps, let's not focus on rage clicks.  We’ll come back to these.  For now, let’s focus on fixing the performance of a single discrete interaction.
 
-Did you notice the UI appear earlier?
-Did the swap affect INP scores?
+## Experiment: Update UI first
 
-## Experiment: What if you move the work to a separate Event Handler?
+What happens if you swap the order of js calls -- updateUI() first, then block()?
 
-* Create a separate `click` handler
-  * Answer
+Did you notice the UI appear earlier?  Does the order affect INP scores?
 
-## Experiment: What if we change the type of Event Handler, from ‘click’ to something else?
+<details>
+<summary>Answer</summary>
 
-* Replace one of the `click` events with `pointerup`, or `mouseup`…
-  * Answer
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+  blockFor(1000);
+});
+```
+</details>
 
-## Experiment: What if about bubbles and captures phases of event handlers?
+## Experiment: Separate handlers
 
-* Replace one of the handlers with capture phase `{ capture: true }`
-  * Answer
+What if you move the work to a separate Event Handler?  Update the UI in one Event Handler, and block the page from a separate handler.
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+});
+  
+button.addEventListener("click", () => {
+  blockFor(1000);
+});
+```
+</details>
+
+## Experiment: Different event types
+
+What if we change the event types for the Event Handlers?  For example, replace one of the `click` event handlers with `pointerup` or `mouseup`?
+
+Most interactions will fire many types of events, from pointer or key events, to hover, focus/blur, and synthetic events like beforechange and beforeinput.
+
+Many real pages have handlers for many different events.
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+});
+
+button.addEventListener("pointerup", () => {
+  blockFor(1000);
+});
+```
+
+</details>
+
+## Experiment: Bubble/Capture phases
+
+What if about bubbles and captures phases of event handlers? You can add the option `{ capture: true }` to `addEventListener`.
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+}, { capture: true });
+
+button.addEventListener("click", () => {
+  blockFor(1000);
+}, { capture: false });
+```
+</details>
 
 ## Conclusion 1
 
-* Any code running in event handlers delays the visual update – the paint – of the page.  That means all interaction event handlers affect responsiveness, and thus INP.
-  * Multiple handlers all run.
-* That also means handlers registered from different scripts will all run!
-* Not only your own code, but also all third party scripts added, if they register event listeners, will affect responsiveness.  It’s common!
+*Any* code running in *any* event handlers will delay the interaction.
 
-## Experiment: What if we remove updateUI() call from the event handler?
+* That includes handlers registered from different scripts...
+* Not only your own code, but also all third party scripts.  It's common!
 
-* Remove `updateUI()` call
-* Score does not update -- but the page still does
-  * Even if we remove the all the metrics
-  * Default handlers, buttons, text entry, highlight text, form components
+## Experiment: No UI update?
 
-## Experiment: What about code outside Event Handlers?
+What if we remove the call to update UI from the event handler?
 
-* Add setInterval()
-  * Answer
+* Score does not update -- but the page still does!
+* Animations, CSS effects, default web component actions (form input), text entry, text highlightling...
 
-There long-running periods are often called Long Tasks
-Notice, it doesn’t always affect my interaction!  If I’m not clicking when the task is running
-So, if you page has Long Tasks occasionally– maybe early during load– or a bit later when some late resources finally arrive…
-It’s like having a page that sneezes
-If you do interact during a sneeze, that causes Input Delay
+## Experiment: Input Delay
 
-## Conclusion 2
+What about long running code outside of Event Handlers?
 
-Any code running in event handlers delays visual update of the page – and any code already running on the page when an interaction happens delays event handlers.
+For example, if you had a late-loading `<script>` that randomly blocked the page during load.
+
+Or, an api, such as `setInterval`, that periodically blocks the page?
+
+<details>
+<summary>Answer</summary>
+
+```js
+setInterval(() => {
+  blockFor(1000);
+});
+
+
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+});
+```
+</details>
+
+These long-running periods are often called Long Tasks.
+
+Notice, it doesn’t *always* affect my interactions!  If I’m not clicking when the task is running, I may get lucky.  Such "random" sneezes can be a nightmare to debug when they only sometimes cause issues.
+
+One way to track these down is through measuring Long Tasks (or Long Animation Frames), and Total Blocking Time, as well as just interactions.
 
 ## Experiment: What about non-visual updates?
 
-* Add console.log();
-  * Try adding before and after the blocking call.
+Try to add a `console.log` to your event handler.  Does it show in console, or is it delayed just like Next Paint?  Does it matter if it is called before or after the call to `blockFor`?
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+  console.log("Hello!");
+  blockFor(1000);
+});
+```
+</details>
 
 INP measures delays in visual updates (paint) after interactions... but not everything is visual.
+
 Console logs, network requests, local storage… these don’t have to wait for browser rendering, and INP does not measure them -- unless they *also* affect next paint.
 
 The web has a simple, but unique system for task scheduling and rendering.
-
-## So, what is special about visual updates?
 
 * [Interaction diagram](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/Ng0j5yaGYZX9Bm3VQ70c.svg).
 * [web.dev/inp](https://web.dev/inp)
 * [web.dev/optimize-inp](https://web.dev/optimize-inp)
 
-## Presentation Delays
+## Discuss: Presentation Delays
 
-Follow: So far, we’ve looked at the performance of input delay and event handlers directly, but what else affects this whole pipeline of visual updates, from Interaction to Next Paint?
-Of course, updating the page using expensive effects!
-Even if the update comes quickly, the browser may still have to work hard to render them!
-Lots of DOM changes, or toggling lots of expensive CSS selectors: Style, Layout
-Adding very large high-resolution images, or SVG/Canvas effects…
+So far, we’ve looked at the performance of JavaScript, via input delay or event handlers directly, but what else affects rendering Next Paint?
 
-Example: SPA transition rebuilds the whole DOM after click, without any initiql feedback.
-Example: Re-building the page with dynamic UI, like search results with filters
-Example: Dark mode toggle
+Well, updating the page with expensive effects!
+
+Even if the page update comes quickly, the browser may still have to work hard to render them!
+
+* On the main thread:
+  * UI frameworks that need to render updates after state changes
+  * DOM changes, or toggling many expensive CSS query selectors can trigger lots of Style, Layout, Paint.
+* Off the main thread:
+  * Using CSS to power GPU effects
+  * Adding very large high-resolution images
+  * Using SVG/Canvas to draw complex scenes
+
+Some Examples, commonly found on the web
+
+* An SPA site rebuilds the whole page DOM after link click, without pausing to provide an initial visual feedback.
+* A search page offers complex search filters with dynamic UI, but runs expensive handlers to do so.
+* One Dark mode toggle triggers style/layout for the whole page
 
 ## Experiment: requestAnimationFrame
 
-* Wrap the blocking with `requestAnimationFrame()`
-  * Answer
+Let's simulate a long presentation delay using the `requestAnimationFrame()` API.
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  score.incrementAndUpdateUI();
+  requestAnimationFrame(() => {
+      blockFor(1000);
+  })
+});
+```
+</details>
+
+## Look at Tooling
+
+On this page, responsiveness is super visual, with the scores and timers and the counter UI... but when testing the average page its more subtle.
+
+Also, when interactions do run long, its not always clear what the culprit is.  Is it:
+
+* Input Delay
+* Event Processing Times
+* Presentation Delay
+
+On any page you want, you can use devtools to help measure responsiveness.
+
+* INP scores in console
+  * JS already added by default to this demo…
+  * Expand details to see breakdowns
+  * You can install the web-vitals extension on Chrome Desktop
+  * You can add this JavaScript yourself to any page
+
+* Performance Panel
+  * Record trace
+  * Interactions lane, main thread activity, screenshots.
 
 ## Experiment: Async effects
 
-Since you can start non-visual effects inside interactions, such as making network requests, starting timers, or just updating global state… What happens when those *(eventually* update the page?
+Since you can start non-visual effects inside interactions, such as making network requests, starting timers, or just updating global state… What happens when those *eventually* update the page?
 
 * Wrap our handler with a `setTimeout(() => { ... }, 1000)`
   * What if it does/doesn't call updates UI?
   * What if it does/doesn't blockFor?
   * Answer
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  //blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
+</details>
 
 ## Conclusion 3
 
@@ -176,6 +300,50 @@ Here are some ideas:
 * `scheduler.postTask()` (Answer)
 * Anything else?
 * Challenge: Web Worker
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  //blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  //blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  //blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  //blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
+</details>
 
 If you get stuck – you can read [web.dev/optimize-inp/#optimize-interactions](web.dev/optimize-inp/#optimize-interactions)
 
