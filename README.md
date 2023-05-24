@@ -130,16 +130,31 @@ button.addEventListener("click", () => {
 ```
 </details>
 
-## Conclusion 1
+## Takeaway
 
 *Any* code running in *any* event handlers will delay the interaction.
 
 * That includes handlers registered from different scripts...
-* Not only your own code, but also all third party scripts.  It's common!
+* That includes framework or library code that runs in handlers.
+  * For example: a state update that triggers a component render.
+* Not only your own code, but also all third party scripts.
+
+It's a common problem!
 
 ## Experiment: No UI update?
 
 What if we remove the call to update UI from the event handler?
+
+<details>
+<summary>Answer</summary>
+
+```js
+button.addEventListener("click", () => {
+  blockFor(1000);
+  // score.incrementAndUpdateUI();
+});
+```
+</details>
 
 * Score does not update -- but the page still does!
 * Animations, CSS effects, default web component actions (form input), text entry, text highlightling...
@@ -195,7 +210,8 @@ Console logs, network requests, local storage… these don’t have to wait for 
 
 The web has a simple, but unique system for task scheduling and rendering.
 
-* [Interaction diagram](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/Ng0j5yaGYZX9Bm3VQ70c.svg).
+![Interaction diagram](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/Ng0j5yaGYZX9Bm3VQ70c.svg)
+
 * [web.dev/inp](https://web.dev/inp)
 * [web.dev/optimize-inp](https://web.dev/optimize-inp)
 
