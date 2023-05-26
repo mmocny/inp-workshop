@@ -675,5 +675,5 @@ And, review from earlier lessons:
 
 ## Next Demo: Taking lessons to ReactJS site
 
-* Repo: [mmocny/inp-codesandbox-nextjs](https://github.com/mmocny/inp-codesandbox-nextjs)
+* Repo: [mmocny/inp-workshop-nextjs](https://github.com/mmocny/inp-workshop-nextjs)
 * [CodeSandbox](https://codesandbox.io/p/github/mmocny/inp-codesandbox-nextjs)
