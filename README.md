@@ -459,8 +459,10 @@ button.addEventListener("click", () => {
   });
 });
 ```
+</details>
 
 Alternatively:
+
 <details>
 <summary>Answer</summary>
 
