@@ -19,10 +19,10 @@ Use a cloud editor, such as [CodeSandbox.io](https://codesandbox.io)
 1. [Open this repo in CodeSandbox.io](https://codesandbox.io/p/github/mmocny/inp-workshop).
 2. Create a branch so you can make edits
 
-
 ### Option 3
 
 Just follow along with a static version: [mmocny.com/inp-workshop/](https://mmocny.com/inp-workshop/)
+
 
 ## Overview of the App
 
@@ -43,41 +43,63 @@ Try to interact with the `Increment` button and watch the score increase.
 
 INP measures how long it takes-- from the moment the user interacts, until the page actually shows the rendered update to the user.
 
-## Experiment: Long running Event Handlers
 
-Open the `index.js` file, and comment out the `blockFor` function inside the event handler.
 
-<details>
-<summary>Answer</summary>
+
+# Workshop
+
+## Try it out, without any changes.
+
+Just try the app, first!
+
+
+## Experiment: Long Tasks and Input Delay
+
+What if you have some `<script>` that randomly blocked the page some time after load?
 
 ```js
+// Block the page once every 3 seconds
+setInterval(() => {
+  blockFor(1000);
+}, 3000);
+
 button.addEventListener("click", () => {
-  //blockFor(1000);
   score.incrementAndUpdateUI();
 });
 ```
-</details>
 
-Try interacting with the page again.
+- These long-running periods are often called Long Tasks.
+  - Notice, it doesn’t *always* affect interactions!
+  - If I'm lucky, I may not click while the long task is running.
+  - Such "random" sneezes can be a nightmare to debug when they only sometimes cause issues.
 
-## Experiment: Rage Clicks
+First Input Delay (FID) would measure such issues, only for the first interaction.  Basically: How often is the page "sneezing" during load, for long enough to affect responsiveness?
 
-What happens if you click multiple times, quickly?
+This was a major problem on the web a few years ago, and to some extent it still is-- but things have changed:
 
-This is sometimes called “rage clicking”.
+- Cookie prompts
+- Lazy Hydration in frameworks
 
-When your site has slow responsiveness, we know from data that it increases rage clicks– and more rage clicks can further degrade responsiveness!
+## Experiment. Add some long running work to the event handler
 
-For the few steps, let's not focus on rage clicks.  We’ll come back to these.  For now, let’s focus on fixing the performance of a single discrete interaction.
+Open the `index.js` file, and comment out the `blockFor` function inside the event handler.
 
-## Experiment: Update UI first
+```js
+button.addEventListener("click", () => {
+  blockFor(1000);
+  score.incrementAndUpdateUI();
+});
+```
 
-What happens if you swap the order of js calls -- updateUI() first, then block()?
+- Now what happens?
+- What happens if you click multiple times, quickly?
+  - Slow responsiveness can motivate rage clicks-– and more rage clicks can further degrade responsiveness!
+
+## 2. Update UI first
+
+What happens if you swap the order of js calls -- `incrementAndUpdateUI()` first?
 
 Did you notice the UI appear earlier?  Does the order affect INP scores?
-
-<details>
-<summary>Answer</summary>
 
 ```js
 button.addEventListener("click", () => {
@@ -85,14 +107,10 @@ button.addEventListener("click", () => {
   blockFor(1000);
 });
 ```
-</details>
 
-## Experiment: Separate handlers
+## 3. Split into separate event handlers
 
-What if you move the work to a separate Event Handler?  Update the UI in one Event Handler, and block the page from a separate handler.
-
-<details>
-<summary>Answer</summary>
+What if you move the work to a separate Event Handlers?
 
 ```js
 button.addEventListener("click", () => {
@@ -103,50 +121,29 @@ button.addEventListener("click", () => {
   blockFor(1000);
 });
 ```
-</details>
 
-## Experiment: Different event types
+## 4. Different event type
 
-What if we change the event types for the Event Handlers?  For example, replace one of the `click` event handlers with `pointerup` or `mouseup`?
-
-Most interactions will fire many types of events, from pointer or key events, to hover, focus/blur, and synthetic events like beforechange and beforeinput.
-
-Many real pages have handlers for many different events.
-
-<details>
-<summary>Answer</summary>
+What if we change the event types for the Event Handlers?
 
 ```js
 button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
 });
 
-button.addEventListener("pointerup", () => {
+button.addEventListener("focusin", () => {
   blockFor(1000);
 });
 ```
 
-</details>
+- Most interactions will fire many types of events:
+  - touch, mouse, pointer, key, click events
+  - hover, focus, blur events
+  - select, beforechange, beforeinput, form submit, invalid, document beforeunload...
 
-## Experiment: Bubble/Capture phases
+Many real pages have handlers for many different event types, which might even compete for UI.
 
-What if about bubbles and captures phases of event handlers? You can add the option `{ capture: true }` to `addEventListener`.
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  score.incrementAndUpdateUI();
-}, { capture: true });
-
-button.addEventListener("click", () => {
-  blockFor(1000);
-}, { capture: false });
-```
-</details>
-
-## Takeaway
+## Lesson
 
 *Any* code running in *any* event handlers will delay the interaction.
 
@@ -157,52 +154,14 @@ button.addEventListener("click", () => {
 
 It's a common problem!
 
-## Experiment: No UI update?
+So what can you do about it:
 
-What if we remove the call to update UI from the event handler?
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  blockFor(1000);
-  // score.incrementAndUpdateUI();
-});
-```
-</details>
-
-* Score does not update -- but the page still does!
-* Animations, CSS effects, default web component actions (form input), text entry, text highlightling...
-
-## Experiment: Input Delay
-
-What about long running code outside of Event Handlers?
-
-For example, if you had a late-loading `<script>` that randomly blocked the page during load.
-
-Or, an api, such as `setInterval`, that periodically blocks the page?
-
-<details>
-<summary>Answer</summary>
-
-```js
-setInterval(() => {
-  blockFor(1000);
-}, 3000);
+1. Optimize it
+2. Remove it
+3. ...move it
 
 
-button.addEventListener("click", () => {
-  score.incrementAndUpdateUI();
-});
-```
-</details>
 
-These long-running periods are often called Long Tasks.
-
-Notice, it doesn’t *always* affect my interactions!  If I’m not clicking when the task is running, I may get lucky.  Such "random" sneezes can be a nightmare to debug when they only sometimes cause issues.
-
-One way to track these down is through measuring Long Tasks (or Long Animation Frames), and Total Blocking Time.
 
 ## Experiment: What about non-visual updates?
 
