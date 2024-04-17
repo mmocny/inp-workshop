@@ -48,7 +48,7 @@ INP measures how long it takes-- from the moment the user interacts, until the p
 
 # Workshop
 
-## Try it out, without any changes.
+## Step 0: Try it out, without any changes.
 
 Just try the app, first!
 
@@ -75,10 +75,13 @@ button.addEventListener("click", () => {
 
 First Input Delay (FID) would measure such issues, only for the first interaction.  Basically: How often is the page "sneezing" during load, for long enough to affect responsiveness?
 
-This was a major problem on the web a few years ago, and to some extent it still is-- but things have changed:
+This was a major problem on the web a few years ago-- and concepts such as Time to Interactive (TTI), Total Blocking Time (TBT), and First Input Delay (FID) were important to track.  But some things have changed:
 
 - Cookie prompts
-- Lazy Hydration in frameworks
+- SSR + Lazy Hydration... until first interaction
+- Expensive Client Side rendering, after interactions
+- JS bloat: Analytics, 1p and 3p scripts hooking onto interactions
+
 
 ## Experiment. Add some long running work to the event handler
 
@@ -95,7 +98,7 @@ button.addEventListener("click", () => {
 - What happens if you click multiple times, quickly?
   - Slow responsiveness can motivate rage clicks-– and more rage clicks can further degrade responsiveness!
 
-## 2. Update UI first
+## Let's try to Update the UI first, then do the work.
 
 What happens if you swap the order of js calls -- `incrementAndUpdateUI()` first?
 
@@ -108,7 +111,7 @@ button.addEventListener("click", () => {
 });
 ```
 
-## 3. Split into separate event handlers
+## What if the work was split up, into separate event handlers
 
 What if you move the work to a separate Event Handlers?
 
@@ -122,7 +125,7 @@ button.addEventListener("click", () => {
 });
 ```
 
-## 4. Different event type
+## What if the event triggered for different reasons?
 
 What if we change the event types for the Event Handlers?
 
@@ -136,25 +139,24 @@ button.addEventListener("focusin", () => {
 });
 ```
 
+# Lesson
+
+Most pages have many event handlers for many different event types, many of which block nexp paint and affect responsiveness.
+
 - Most interactions will fire many types of events:
   - touch, mouse, pointer, key, click events
   - hover, focus, blur events
   - select, beforechange, beforeinput, form submit, invalid, document beforeunload...
 
-Many real pages have handlers for many different event types, which might even compete for UI.
-
-## Lesson
-
 *Any* code running in *any* event handlers will delay the interaction.
 
-* That includes handlers registered from different scripts...
-* That includes framework or library code that runs in handlers.
-  * For example: a state update that triggers a component render.
-* Not only your own code, but also all third party scripts.
+- That includes handlers registered from different scripts...
+- That includes framework or library code that runs in handlers.
+  - For example: a state update that triggers a component render.
+- Not only your own code, but also all third party scripts.
 
-It's a common problem!
 
-So what can you do about it:
+So what can you do about it?
 
 1. Optimize it
 2. Remove it
@@ -169,9 +171,6 @@ Try to add a `console.log` to your event handler.
 
 When does it show in console?  Is it delayed just like Next Paint?  Does it matter if it is called before or after the call to `blockFor`?
 
-<details>
-<summary>Answer</summary>
-
 ```js
 button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
@@ -179,20 +178,21 @@ button.addEventListener("click", () => {
   blockFor(1000);
 });
 ```
-</details>
 
 INP measures delays in visual updates (paint) after interactions... but not everything is visual.
 
-Console logs, network requests, local storage… these don’t have to wait for browser rendering, and INP does not measure them -- unless they *also* affect next paint.
-
-(Actually, even DOM, style, layout, etc changes are observable right away, through JavaScript, just the pixel representation is delayed)
+- Console logs
+- network requests
+- local storage…
 
 The web has a simple, but unique system for task scheduling and rendering.
 
-![Interaction diagram](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/Ng0j5yaGYZX9Bm3VQ70c.svg)
+![Optimize Interaction To Next Paint](https://web.dev/static/articles/inp/image/a-diagram-depicting-inte-d2bec16a5952.svg)
 
 * [web.dev/inp](https://web.dev/inp)
 * [web.dev/optimize-inp](https://web.dev/optimize-inp)
+
+
 
 ## Discuss: Presentation Delays
 
@@ -210,7 +210,7 @@ Even if the page update comes quickly, the browser may still have to work hard t
   * Adding very large high-resolution images
   * Using SVG/Canvas to draw complex scenes
 
-![Rendering diagram](https://wd.imgix.net/image/cGQxYFGJrUUaUZyWhyt9yo5gHhs1/yiOcXy6pCOAlx6fhBVFP.jpeg?auto=format&w=1600)
+![Rendering diagram](https://developer.chrome.com/static/docs/chromium/renderingng-architecture/image/diagram-the-rendering-pi-093c8ed755a54_1920.jpeg)
 
 * [RenderingNG](https://developer.chrome.com/articles/renderingng/)
 
