@@ -3,28 +3,30 @@ import { blockFor } from "./workshop/utils/blockFor.js";
 const score = document.querySelector('score-keeper');
 const button = score.button;
 
-button.addEventListener("click", () => {
+
+async function afterNextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
+    // Fallback-- in case you are e.g. in a background tab
+    setTimeout(resolve, 1000);
+  });
+}
+
+async function blockInChunks(ms, chunks, signal) {
+  for (let i = 0; i < chunks; i++) {
+    if (signal.aborted) return;
+    blockFor(ms / chunks);
+    await scheduler.yield();
+  }
+}
+
+let abortController;
+button.addEventListener("click", async () => {
+  abortController?.abort();
+  abortController = new AbortController();
   score.incrementAndUpdateUI();
-
-  // Test one at a time!
-
-  setTimeout(() => {
-    blockFor(1000);
-  }, 0);
-
-  Promise.resolve().then(() => {
-    blockFor(1000);
-  });
-
-  requestAnimationFrame(() => {
-    blockFor(1000);
-  });
-
-  requestIdleCallback(() => {
-    blockFor(1000);
-  });
-
-  scheduler.postTask(() => {
-    blockFor(1000);
-  }, { priority: "background", delay: 0 }); // "user-visible", "background"
+  await afterNextPaint();
+  blockInChunks(1000, 10, abortController.signal);
 });

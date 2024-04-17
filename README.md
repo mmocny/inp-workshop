@@ -456,41 +456,21 @@ Here’s what we want… even if we’re in the middle of work, we want to *paus
 
 Challenge: How can we do that?
 
-There are some apis like `isInputPending`, but I think it's better to split long tasks up into chunks.
+There are some apis like `isInputPending`, but you get this by default if you just split long tasks up into chunks.
 
-First attempt: let's do something simple.  Replace this:
-
-<details>
-<summary>Answer</summary>
 
 ```js
+function blockInChunks(ms, chunks) {
+  for (let i = 0; i < chunks; i++) {
+    setTimeout(() => blockFor(ms / chunks), 0);
+  }
+}
+
 button.addEventListener("click", () => {
   score.incrementAndUpdateUI();
-
-  requestAnimationFrame(() => {
-    setTimeout(() => blockFor(1000), 0);
-  });
-```
-</details>
-
-With this:
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  score.incrementAndUpdateUI();
-
-  requestAnimationFrame(() => {
-    setTimeout(() => blockFor(100), 0);
-    setTimeout(() => blockFor(100), 0);
-    setTimeout(() => blockFor(100), 0);
-    // ... 10x times total
-  });
+  blockInChunks(1000, 10);
 });
 ```
-</details>
 
 This works by allowing the browser to schedule each task individually, and input can take higher priority!
 
@@ -504,29 +484,30 @@ However, we can leverage modern JS access to `async` and `await` in order to eas
 
 For example:
 
-<details>
-<summary>Answer</summary>
-
 ```js
-import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
+async function afterNextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
+    // Fallback-- in case you are e.g. in a background tab
+    setTimeout(resolve, 1000);
+  });
+}
 
-async function blockInPiecesYieldy(ms) {
-  const ms_per_part = 10;
-  const parts = ms / ms_per_part;
-  for (let i = 0; i < parts; i++) {
-    // Polyfill for scheduler.yield()
-    await schedulerDotYield(); 
-
-    blockFor(ms_per_part);
+async function blockInChunks(ms, chunks) {
+  for (let i = 0; i < chunks; i++) {
+    blockFor(ms / chunks);
+    await scheduler.yield();
   }
 }
 
-button.addEventListener("click", async () => {
+button.addEventListener("click", async() => {
   score.incrementAndUpdateUI();
-  await blockInPiecesYieldy(1000);
+  await afterNextPaint();
+  blockInChunks(1000, 10);
 });
 ```
-</details>
 
 ## Strategy 2: now with AbortContoller()
 
@@ -536,38 +517,34 @@ With Option 1: `debounce()`, we cancelled the previous timeout with each new int
 
 One easy way is to use an `AbortController()`:
 
-<details>
-<summary>Answer</summary>
-
 ```js
-import { schedulerDotYield } from "./workshop/utils/schedulerDotYield.js";
+async function afterNextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
+    // Fallback-- in case you are e.g. in a background tab
+    setTimeout(resolve, 1000);
+  });
+}
 
-async function blockInPiecesYieldyAborty(ms, signal) {
-  const parts = ms / 10;
-  for (let i = 0; i < parts; i++) {
+async function blockInChunks(ms, chunks, signal) {
+  for (let i = 0; i < chunks; i++) {
     if (signal.aborted) return;
-    
-    // Polyfill for scheduler.yield()
-    await schedulerDotYield(); 
-
-    blockFor(10);
+    blockFor(ms / chunks);
+    await scheduler.yield();
   }
 }
 
-let abortController = new AbortController();
-
+let abortController;
 button.addEventListener("click", async () => {
-  score.incrementAndUpdateUI();
-
-  abortController.abort();
+  abortController?.abort();
   abortController = new AbortController();
-
-  await blockInPiecesYieldyAborty(1000, abortController.signal);
+  score.incrementAndUpdateUI();
+  await afterNextPaint();
+  blockInChunks(1000, 10, abortController.signal);
 });
 ```
-</details>
-
-* Caution: Yielding is good for responsiveness, because it allows scheduling Initial feedback and allows rendering… but doing it too much can affect overall CPU thoughput.  You don't want to yield between every since line of code!
 
 ## Conclusion
 
