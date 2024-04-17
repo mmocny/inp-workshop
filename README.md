@@ -2,8 +2,7 @@
 
 A interactive demo and workshop for learning about [Interaction to Next Paint (INP)](https://web.deb/inp)
 
-![Optimize Interaction To Next Paint](https://web-dev.imgix.net/image/jL3OLOhcWUQDnR4XjewLBx4e3PC3/FV8Ls9SDF6UQ3v2IgKUw.jpg?auto=format&w=1600)
-
+![Optimize Interaction To Next Paint](https://web.dev/static/articles/inp/image/a-diagram-depicting-inte-d2bec16a5952.svg)
 
 ## Getting started
 
