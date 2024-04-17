@@ -75,12 +75,6 @@ button.addEventListener("click", () => {
 
 First Input Delay (FID) would measure such issues, only for the first interaction.  Basically: How often is the page "sneezing" during load, for long enough to affect responsiveness?
 
-This was a major problem on the web a few years ago-- and concepts such as Time to Interactive (TTI), Total Blocking Time (TBT), and First Input Delay (FID) were important to track.  But some things have changed:
-
-- Cookie prompts
-- SSR + Lazy Hydration... until first interaction
-- Expensive Client Side rendering, after interactions
-- JS bloat: Analytics, 1p and 3p scripts hooking onto interactions
 
 
 ## Experiment. Add some long running work to the event handler
