@@ -73,7 +73,10 @@ button.addEventListener("click", () => {
   - If I'm lucky, I may not click while the long task is running.
   - Such "random" sneezes can be a nightmare to debug when they only sometimes cause issues.
 
-First Input Delay (FID) would measure such issues, only for the first interaction.  Basically: How often is the page "sneezing" during load, for long enough to affect responsiveness?
+First Input Delay (FID) would measure such issues, only for the first interaction.
+
+Basically: How often is the page "sneezing" during load, for long enough to affect responsiveness?  But this is not all that affects responsiveness...
+
 
 
 
@@ -150,12 +153,6 @@ Most pages have many event handlers for many different event types, many of whic
 - Not only your own code, but also all third party scripts.
 
 
-So what can you do about it?
-
-1. Optimize it
-2. Remove it
-3. ...move it
-
 
 
 
@@ -188,17 +185,19 @@ The web has a simple, but unique system for task scheduling and rendering.
 
 
 
-## Discuss: Presentation Delays
+## Discuss: Rendering and Presentation Delays
 
-So far, we’ve looked at the performance of JavaScript, via input delay or event handlers, but what else affects rendering Next Paint?
+So far, we’ve looked at Input delays and Processing of event handlers, but what else affects Interaction to Next Paint?
 
-Well, updating the page with expensive effects!
+Well, the time spent actually rendering the page!
 
 Even if the page update comes quickly, the browser may still have to work hard to render them!
 
 * On the main thread:
   * UI frameworks that need to render updates after state changes
   * DOM changes, or toggling many expensive CSS query selectors can trigger lots of Style, Layout, Paint.
+  * Long running Paint for complex scenes (for example, pages with very large amounts of text)
+
 * Off the main thread:
   * Using CSS to power GPU effects
   * Adding very large high-resolution images
@@ -208,95 +207,26 @@ Even if the page update comes quickly, the browser may still have to work hard t
 
 * [RenderingNG](https://developer.chrome.com/articles/renderingng/)
 
-Some Examples, commonly found on the web
 
-* An SPA site rebuilds the whole page DOM after link click, without pausing to provide an initial visual feedback.
-* A search page offers complex search filters with dynamic UI, but runs expensive handlers to do so.
-* One Dark mode toggle triggers style/layout for the whole page
+## Tooling helps!
 
-## Experiment: requestAnimationFrame
+DevTools can help you identify long interactions, and the cause of long delays.
 
-Let's simulate a long presentation delay using the `requestAnimationFrame()` API.
-
-<details>
-<summary>Answer</summary>
-
-```js
-button.addEventListener("click", () => {
-  score.incrementAndUpdateUI();
-  requestAnimationFrame(() => {
-    blockFor(1000);
-  });
-});
-```
-</details>
-
-## Look at Tooling
-
-On this page, responsiveness is super visual, with the scores and timers and the counter UI... but when testing the average page its more subtle.
-
-When interactions do run long, its not always clear what the culprit is.  Is it:
-
-* Input Delay
-* Event Processing Times
-* Presentation Delay
-
-On any page you want, you can use devtools to help measure responsiveness.
-
-* INP scores in console
-  * JS already added by default to this demo…
-  * Expand details to see breakdowns
-  * You can install the web-vitals extension on Chrome Desktop
-  * You can add this JavaScript yourself to any page
-
-* Performance Panel
-  * Record trace
-  * Interactions lane, main thread activity, screenshots.
-
-Try adding a bit of all these problems to the page:
-
-<details>
-<summary>Answer</summary>
-
-```js
-setInterval(() => {
-  blockFor(1000);
-}, 3000);
-
-button.addEventListener("click", () => {
-  blockFor(1000);
-  score.incrementAndUpdateUI();
-
-  requestAnimationFrame(() => {
-    blockFor(1000);
-  });
-});
-```
-</details>
-
-...Then use the console and performance panel to diagnose the issue(s).
-
-## Tooling Flow
 
 This is a flow I find useful, every day:
 
 1. Navigate the web, as I normally do
-2. Leave DevTools console open, with the Web Vitals extension logging interactions
-3. If I see a poorly performing interaction, I try to repeat
-  * If I can't repeat, I use the console logs to get insights
-  * If I can repeat, I record in performance panel
+2. Leave DevTools console open, with the Web Vitals extension logging all interactions
+3. If I see a poorly performing interaction, I try to reproduce.
+  * If I can't repeat, I review the console logs to get insights
+  * If I can repeat, I record a trace in performance panel
 
-## Experiment: Async effects
 
-Since you can start non-visual effects inside interactions, such as making network requests, starting timers, or just updating global state… What happens when those *eventually* update the page?
+## What about asynchronous updates, like network usage?
 
-Let's wrap the contents of our event handler with a `setTimeout`.
+What if your event handlers don't update the page at all, and only just schedule some work for the future?  For example, `await fetch(...)`.
 
-What if it does/doesn't update UI?
-What if it does/doesn't block?
-
-<details>
-<summary>Answer</summary>
+Let's simulate this with `setTimeout`.
 
 ```js
 button.addEventListener("click", () => {
@@ -308,24 +238,31 @@ button.addEventListener("click", () => {
 ```
 </details>
 
-However-- what if I interact *again* after the async call resolves?
+Notice that INP only measures the Next Paint, and doesn't measure this effect.
 
-## Take away
+In this case, the Counter UI looks sluggish-- but the page itself is very responsive.  Other styling, animations, accesibility features, are all very responsive.
 
-As long as the *Next Paint* after Interaction is allowed to render, even if the browser decides it doesn't actually need a new rendering update, Interaction measurement stops.
+...Unless I click again, during the async effect.
 
-Asynchronous effects, such as updates that come after timers or network response will *not* affect INP.  Unless, of course, they actually block Next Paint, or the *next* Interaction (as input delay).
 
-Another example: a `fetch()` or resource attached to dom elements, which is already prefetched may actually be available before the next rendering opportunity.
+# Lesson
 
-## Lesson: if you cannot remove it, at least move it!
+As long as the *Next Paint* after Interaction is allowed to render, Interaction to Next Paint measurement stops.
 
-If async effects aren't measured-- that's a great place to put our long-running code!
+Your Next Paint immediately after the interaction is your first opportunity to provide visual feedback.  The browser will often profice default feeback:
 
-Let's change to update the UI from the click handler, but run the blocking work from the timeout.
+- User action pseudo classes (like `:hover` and `:active`) trigger
+- Default UA actions:
+  - link clicks to navigate
+  - form submit
+  - checkbox checked
+- Accessibility features
 
-<details>
-<summary>Answer</summary>
+## Strategy: Initial UI Update quickly, delay expensive followup work
+
+So, if async effects aren't measured-- perhaps that's a great place to hide our long-running code?
+
+Let's change the click handler to delay the long blocking work by using a timeout.
 
 ```js
 button.addEventListener("click", () => {
@@ -333,12 +270,12 @@ button.addEventListener("click", () => {
 
   setTimeout(() => {
     blockFor(1000);
-  }, 100);
+  }, 1000);
 });
 ```
-</details>
 
-Can we do better than a fixed 100ms timeout?
+
+## Experiment: Can we do better than a fixed 1000ms timeout?
 
 We likely still want the code to run as quickly as possible... otherwise we should have just removed it!
 
@@ -354,11 +291,8 @@ Here are some ideas:
 * `requestAnimationFrame`
 * `requestIdleCallback`
 * `scheduler.postTask()`
+* `scheduler.yield()`
 * Anything else?
-* Challenge: Web Worker
-
-<details>
-<summary>Answer</summary>
 
 ```js
 button.addEventListener("click", () => {
@@ -387,14 +321,14 @@ button.addEventListener("click", () => {
   }, { priority: "background", delay: 0 }); // "user-visible", "background"
 });
 ```
-</details>
+
 
 ## What worked, what did not?
 
-Trick: `requestAnimationFrame` + `setTimeout`, a simple polyfill for `requestPostAnimationFrame`.
-
 <details>
 <summary>Answer</summary>
+
+Trick: `requestAnimationFrame` first, then `setTimeout(0)`.
 
 ```js
 function afterNextPaint(callback) {
@@ -411,40 +345,48 @@ button.addEventListener("click", () => {
   });
 });
 ```
-</details>
 
-Alternatively:
-
-<details>
-<summary>Answer</summary>
+Alternatively, my preference:
 
 ```js
-function afterNextPaint(callback) {
-  requestAnimationFrame(() => {
-    setTimeout(callback, 0);
+async function afterNextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
   });
-}
-
-async function nextPaint() {
-  return new Promise(resolve => afterNextPaint(resolve));
 }
 
 button.addEventListener("click", async () => {
   score.incrementAndUpdateUI();
 
-  await nextPaint();
+  await afterNextPaint();
   blockFor(1000);
 });
 ```
+
+And you may want a fallback, in case rendering is not scheduled at all:
+
+```js
+async function afterNextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
+    // Fallback-- in case you are e.g. in a background tab
+    setTimeout(resolve, 1000);
+  });
+}
+```
 </details>
 
-## Mid-point summary
 
-We are about to move into more complicated topics, but the most important lessons you just learned:
+
+## Summary
 
 * INP measures all Interactions
 * Each Interaction is measured from Input to Next Paint -- the way the user *sees* responsiveness.
-* Input Delay, (Event) Processing Times, and then Presentation Delay’s, all affect Interaction responsiveness.
+* Input Delay, (Event) Processing Times, Rendering and Presentation Delays, all affect Interaction responsiveness.
 * You can measure INP, and Interaction breakdowns, easily!
 
 Lessons:
@@ -453,7 +395,24 @@ Lessons:
 * Move needless code out of event handlers until after next paint
 * Make sure the Rendering update itself is efficient for browser
 
-## Multiple Interactions (and Rage Clicks)
+
+History: Input delays were a major problem on the web a few years ago-- and concepts such as Time to Interactive (TTI), Total Blocking Time (TBT), and First Input Delay (FID) were important to track.  But some things have changed:
+
+- Cookie prompts
+- SSR + Lazy Hydration... until first interaction
+- Expensive Client Side rendering, after interactions
+- JS bloat: Analytics, 1p and 3p scripts hooking onto interactions
+
+
+Today, Long Animation Frames, especailly for Interactions are a problem.
+
+But new issues are also emerging: such as lazy loading and inherantly asynchronous event dispatch (i.e. many modern frameworks).
+
+
+
+
+
+# Next: Breaking up all Long Tasks
 
 Moving long blocking work around can help -- but it still blocks the page -- affecting future interactions as well as many other page updates, such as (certain) animations.
 
@@ -462,7 +421,8 @@ Ideally, we want to remove Long Tasks completely!
 Strategies:
 
 * Remove unnecessary code altogether (especially scripts)
-* Optimize code to not be needlessly long-running
+* Optimize tasks to not be maybe needlessly long-running
+* Break up large chunks into smaller ones
 * Abort stale work when a new interactions arrive.
 
 ## Strategy 1: Debounce
@@ -475,8 +435,6 @@ Useful for: autocomplete
 * save the timerid when you do so
 * if a new interaction arrives, `clearTimeout` the previous
 
-<details>
-<summary>Answer</summary>
 
 ```js
 let timer;
@@ -491,7 +449,6 @@ button.addEventListener("click", () => {
   }, 1000);
 });
 ```
-</details>
 
 ## Strategy 2: Interrupt long running work
 
